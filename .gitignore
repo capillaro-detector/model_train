@@ -127,3 +127,16 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+yolov5/
+eyes-3/
+eyes-3_new/
+recognizer/
+foto/
+PolygonObjectDetection/data
+keras_model/data
+keras_model/dataset
+keras_model/models
+*.pt
+*.png
+*.h5
