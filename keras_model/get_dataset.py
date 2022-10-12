@@ -28,7 +28,7 @@ class EyeDataset(Dataset):
     def read_image(path: str) -> np.ndarray:
         image = cv2.imread(str(path), cv2.IMREAD_COLOR)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        image = np.array(image / 511, dtype=np.float32)
+        #image = np.array(image / 215, dtype=np.float32)
         return image, path
 
     @staticmethod

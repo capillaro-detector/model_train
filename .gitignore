@@ -133,7 +133,7 @@ eyes-3/
 eyes-3_new/
 recognizer/
 foto/
-PolygonObjectDetection/data
+PolygonObjectDetection/
 keras_model/data
 keras_model/dataset
 keras_model/models
