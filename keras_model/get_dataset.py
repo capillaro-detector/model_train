@@ -1,6 +1,7 @@
 import glob
 import json
 from pathlib import Path
+from typing import Any, Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import albumentations as A
@@ -16,7 +17,7 @@ class EyeDataset(Dataset):
     """
     Класс датасета, организующий загрузку и получение изображений и соответствующих разметок
     """
-
+    
     def __init__(self, data_folder: str, transform = None):
         self.class_ids = {"vessel": 1}
 
@@ -148,3 +149,58 @@ class DatasetPart(Dataset):
 
     def __len__(self) -> int:
         return len(self.indices)
+
+
+class AugDataset(Dataset):
+
+    transform = A.Compose([
+        A.RandomCrop(width=256, height=256),
+        A.HorizontalFlip(p=0.5),
+        A.RandomBrightnessContrast(p=0.2),
+    ])
+
+    def __init__(self, base_dataset: Path, data_folder: Path, transform = None) -> None:
+        self.dataset = base_dataset
+        self.data_dir = data_folder
+        self.image_dir = Path(self.data_dir, 'image')
+        self.mask_dir = Path(self.data_dir, 'mask')
+        self.files_list = self._get_files()
+
+    def read_images(self, name: Path) -> Tuple[Any, Any]:
+        image = cv2.imread(str(self.image_dir / name))
+        mask = cv2.imread(str(self.mask_dir / name))
+        return image, mask
+
+    def transformer(self, image, mask) -> Tuple[Any, Any]:
+        transformed = self.transform(image, mask)
+        transformed_image = transformed['image']
+        transformed_mask = transformed['mask']
+        return transformed_image, transformed_mask    
+
+    def save_images(self, image, mask, image_name: Path, num: int) -> None:
+        new_name = f'{image_name.stem}_{num}{image_name.suffix}'
+        image_path = Path(self.image_dir, new_name)
+        mask_path = Path(self.mask_dir, new_name)
+        cv2.imwrite(str(image_path), image)
+        cv2.imwrite(str(mask_path), mask[..., 0])
+
+    def create_aug(self, image, mask):
+        for i in range(100):
+            image1, mask1 = self.transformer(image, mask)
+            self.save_images(image1, mask1, name, i)
+
+    def _get_files(self, suff: str = 'png') -> List[Path]:
+        return sorted(self.image_dir.glob(f'*.{suff}'))
+
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        name = self.files_list[idx].name
+        image, mask = self.read_images(name)
+        sample = {
+            'image': image,
+            'mask': mask,
+        }
+        
+        return sample
+
+    def __len__(self) -> int:
+        return len(self.files_list)
